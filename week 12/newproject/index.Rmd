@@ -1,0 +1,70 @@
+---
+title: "Fundamentals of Computing and Data Display"
+subtitle: "R Markdown and LaTeX"
+author: "Christoph Kern"
+date: "`r Sys.Date()`"
+output:
+  html_document:
+    code_folding: show
+    df_print: kable
+    highlight: textmate
+    theme: simplex
+    toc: yes
+references:
+- id: Xie2018
+  title: R Markdown. The Definitive Guide
+  author:
+  - family: Xie
+    given: Yihui
+  - family: Allaire
+    given: J.J.
+  - family: Grolemund
+    given: Garrett
+  type: book
+  publisher: Chapman \& Hall/CRC Press.
+  issued:
+    year: 2018
+---
+
+```{r, include = FALSE}
+library(knitr)
+library(RSocrata)
+library(tidyverse)
+```
+
+## Data
+***
+This notebook exemplifies some features of R Markdown [@Xie2018]. We use the [Chicago crime data](https://dev.socrata.com/foundry/data.cityofchicago.org/6zsd-86xi) as our example data set. Note that this code chunk utilizes caching, i.e. the actual API query will be executed only once.
+
+```{r, cache = TRUE}
+url <- "https://data.cityofchicago.org/resource/6zsd-86xi.json?$where="
+c18 <- read.socrata(paste0(url,"date between '2018-01-01' and '2018-07-01'"))
+```
+
+Data tables can be formatted in different styles. We use the `knitr::kable` function as an option in the YAML header of this document.
+
+```{r}
+c18[1:5, 1:5]
+```
+
+## Example code
+***
+Inline code can be used to directly display code results in the text. For example, the number of crime incidents in our data is `r nrow(c18)`.
+
+There are a number of chunk options to control the layout of figures. In addition, we can hide the code itself with `echo = FALSE`.
+
+```{r, echo = FALSE, message = FALSE, fig.align = "center", fig.cap = "Crime in Detroit", out.width = "55%"}
+c18 %>%
+  separate(date, c("date", "time"), sep = " ") %>%
+  filter(as.Date(date) < "2018-07-01") %>%
+  group_by(date) %>%
+  summarise(total = n()) %>%
+  ggplot() +
+  geom_line(aes(x = as.Date(date), y = total)) +
+  geom_smooth(aes(x = as.Date(date), y = total)) +
+  labs(x = "Date", 
+       y = "Total") +
+  theme_light()
+```
+
+## References
